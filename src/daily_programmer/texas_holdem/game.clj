@@ -72,7 +72,7 @@
       (burn-card)
       (deal-river))))
 
-(def suit-strs  { :clubs "\u2663" :diamonds "\u2666" :hearts "\u2665" :spades "\u2660" })
+(def suit-strs  (zipmap suits  ["\u2663" "\u2666" "\u2665" "\u2660"]))
 (def value-strs (zipmap values ["2" "3" "4" "5" "6" "7" "8" "9" "10" "J" "Q" "K" "A"]))
 
 (defn hand-to-str
