@@ -1,9 +1,5 @@
 (ns daily-programmer.core-test
   (:use
-    [clojure.test]
-    [midje.sweet]
+    [expectations]
     [daily-programmer.core]))
 
-(fact
-  "TODO"
-  (foo 23) => 24)

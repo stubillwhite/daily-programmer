@@ -1,59 +1,59 @@
 (ns daily-programmer.texas-holdem.game
   (:require
+    [daily-programmer.texas-holdem.deck :as deck]
+    [daily-programmer.texas-holdem.analysis :as analysis]
     [clojure.string :as string]
-    [taoensso.timbre :as timbre]))
+    [taoensso.timbre :as timbre])
+  (:use
+    [daily-programmer.utils :refer [def-]]))
 
 (timbre/refer-timbre)
 
-(def suits  [ :clubs :diamonds :hearts :spades ])
-(def values [ :two :three :four :five :six :seven :eight :nine :ten :jack :queen :king :ace ])
-
-(def standard-deck
-  (for [ s suits v values ] { :suit s :value v }))
-
 (defn player
+  "Returns a new player."
   ([id]
     { :id    id
       :cards [] }))
 
 (defn game
+  "Returns a new game."
   ([players]
     { :players  (into {} (for [p players] [(p :id) p]))
-      :deck     (shuffle standard-deck)
+      :deck     (shuffle deck/standard-deck)
       :discards []
       :flop     []
       :turn     []
       :river    [] }))
 
-(defn deal-card-to
+(defn- deal-card-to
   ([game target]
     (-> game
       (update-in target  (fn [x] (cons (first (game :deck)) x)))
       (update-in [:deck] (fn [x] (drop 1 x))))))
 
-(defn burn-card
+(defn- burn-card
   ([game]
     (-> game
       (deal-card-to [:discards]))))
 
-(defn deal-flop
+(defn- deal-flop
   ([game]
     (-> game
       (deal-card-to [:flop])
       (deal-card-to [:flop])
       (deal-card-to [:flop]))))
 
-(defn deal-turn
+(defn- deal-turn
   ([game]
     (-> game
       (deal-card-to [:turn]))))
 
-(defn deal-river
+(defn- deal-river
   ([game]
     (-> game
       (deal-card-to [:river]))))
 
-(defn deal-to-players
+(defn- deal-to-players
   ([game]
     (reduce
       (fn [game id] (-> game (deal-card-to [:players id :cards])))
@@ -70,34 +70,39 @@
       (burn-card)
       (deal-turn)
       (burn-card)
-      (deal-river))))
+      (deal-river)
+      (analysis/calculate-best-hand-per-player))))
 
-(def suit-strs  (zipmap suits  ["\u2663" "\u2666" "\u2665" "\u2660"]))
-(def value-strs (zipmap values ["2" "3" "4" "5" "6" "7" "8" "9" "10" "J" "Q" "K" "A"]))
-
-(defn hand-to-str
+(defn cards-to-str
   ([cards]
     (string/join " "
       (map
-        (fn [{:keys [suit value]}] (format "%s%s" (get value-strs value) (get suit-strs suit)))
+        (fn [{:keys [suit value]}] (format "%s%s" (get deck/value-strs value) (get deck/suit-strs suit)))
         cards))))
 
 (defn game-to-str
-  ([{:keys [players flop turn river] :as game}]
-    (str
-      (string/join "\n"
-        (map
-          (fn [x] (format "Player %s hand: %s" x (hand-to-str (get-in game [:players x :cards]))))
-          (keys players)))
-      (format "\nFlop:  %s" (hand-to-str (get-in game [:flop])))
-      (format "\nTurn:  %s" (hand-to-str (get-in game [:turn])))
-      (format "\nRiver: %s" (hand-to-str (get-in game [:river]))))))
+  ([{:keys [players flop turn river winner] :as game}]
+    (let [ player-cards     (fn [id] (format "%s cards: %s" id
+                                      (cards-to-str (get-in players [id :cards]))))
+           
+           player-best-hand (fn [id] (format "%s best hand: %s (%s)" id
+                                      (cards-to-str (get-in players [id :best-hand :cards]))
+                                      (get-in players [id :best-hand :description]))) ]
+      (str
+        (string/join "\n" (map player-cards (keys players)))
+        (format "\nFlop:  %s" (cards-to-str (get-in game [:flop])))
+        (format "\nTurn:  %s" (cards-to-str (get-in game [:turn])))
+        (format "\nRiver: %s" (cards-to-str (get-in game [:river])))
+        "\n--\n"
+        (string/join "\n" (map player-best-hand (keys players)))))))
 
 (defn play-example-game
   ([]
-    (let [ players (for [x (range 1 9)] (player x))
+    (let [ players (for [x (range 1 6)] (player (str "P" x)))
            game    (game players) ]
       (print (game-to-str (play-game game))))))
+
+
 
 
 
