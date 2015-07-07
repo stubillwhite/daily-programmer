@@ -71,7 +71,8 @@
       (deal-turn)
       (burn-card)
       (deal-river)
-      (analysis/calculate-best-hand-per-player))))
+      (analysis/calculate-best-hand-per-player)
+      (analysis/calculate-player-rank))))
 
 (defn cards-to-str
   ([cards]
@@ -81,7 +82,7 @@
         cards))))
 
 (defn game-to-str
-  ([{:keys [players flop turn river winner] :as game}]
+  ([{:keys [players flop turn river player-rank] :as game}]
     (let [ player-cards     (fn [id] (format "%s cards: %s" id
                                       (cards-to-str (get-in players [id :cards]))))
            
@@ -94,7 +95,7 @@
         (format "\nTurn:  %s" (cards-to-str (get-in game [:turn])))
         (format "\nRiver: %s" (cards-to-str (get-in game [:river])))
         "\n--\n"
-        (string/join "\n" (map player-best-hand (keys players)))))))
+        (string/join "\n" (map player-best-hand player-rank))))))
 
 (defn play-example-game
   ([]
@@ -102,7 +103,5 @@
            game    (game players) ]
       (print (game-to-str (play-game game))))))
 
-
-
-
-
+;; TODO:
+;; - Make rank-hands work on a seq of maps instead of a seq of seqs for the ranking, so each hand can have metadata associated with it

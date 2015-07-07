@@ -86,6 +86,7 @@
            ranks      (zipmap categories (range (count categories))) ]
       (get ranks category))))
 
+;; TODO refactor into multimethod
 (defn- describe-hand
   ([c kicker-rank]
     (let [[k1 k2 k3 k4 k5] (map deck/value-strs kicker-rank)]
@@ -174,7 +175,7 @@
 
 (defn- compare-rank
   ([[a & a-rest] [b & b-rest]]
-    (let [ result (compare a b) ]
+    (let [ result (compare b a) ]
       (cond
         (not (zero? result))                  result
         (and (empty? a-rest) (empty? b-rest)) 0
@@ -187,7 +188,7 @@
       (->> hands
         (map sort-cards)
         (map analyse-hand)
-        (reverse-sort-by :rank compare-rank)))))
+        (sort-by :rank compare-rank)))))
 
 ;; Very inefficient but doesn't matter as we only care about all the ways to select three cards from five
 
@@ -211,3 +212,12 @@
         (fn [game id] (assoc-in game [:players id :best-hand] (best-hand (get-in game [:players id :cards]))))
         game
         (keys (game :players))))))
+
+(defn calculate-player-rank
+  ([{:keys [players] :as game}]
+    (let [ hand-to-player (into {} (for [ p (vals players) ] [ (-> p :best-hand :cards) (p :id) ]))
+           hand-rank      (rank-hands (keys hand-to-player))
+           player-rank    (map (fn [x] (get hand-to-player (x :cards))) hand-rank) ]
+      (assoc-in game [:player-rank] player-rank))))
+
+;; TODO rename game to round
