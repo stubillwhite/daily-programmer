@@ -87,7 +87,7 @@
                                       (cards-to-str (get-in players [id :cards]))))
            
            player-best-hand (fn [id] (format "%s best hand: %s (%s)" id
-                                      (cards-to-str (get-in players [id :best-hand :cards]))
+                                      (cards-to-str (get-in players [id :best-hand :hand]))
                                       (get-in players [id :best-hand :description]))) ]
       (str
         (string/join "\n" (map player-cards (keys players)))

@@ -122,7 +122,7 @@
   ([hand]
     (let [ category (categorise-hand hand)
            rank     (rank-hand category hand) ]
-      { :cards       hand    ;; TODO RENAME TO HAND
+      { :hand        hand
         :category    category
         :rank        rank
         :description (describe-hand category rank) })))
@@ -170,9 +170,10 @@
         (keys (game :players))))))
 
 (defn calculate-player-rank
+  "Adds a :player-rank entry t the game describing the rank order of each player's hand."
   ([{:keys [players] :as game}]
-    (let [ hand-to-player (into {} (for [ p (vals players) ] [ (-> p :best-hand :cards) (p :id) ]))
+    (let [ hand-to-player (into {} (for [ p (vals players) ] [ (-> p :best-hand :hand) (p :id) ]))
            hand-rank      (rank-hands (keys hand-to-player))
-           player-rank    (map (fn [x] (get hand-to-player (x :cards))) hand-rank) ]
+           player-rank    (map (fn [x] (get hand-to-player (x :hand))) hand-rank) ]
       (assoc-in game [:player-rank] player-rank))))
 
