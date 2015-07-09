@@ -74,7 +74,7 @@
       (analysis/calculate-best-hand-per-player)
       (analysis/calculate-player-rank))))
 
-(defn cards-to-str
+(defn- cards-to-str
   ([cards]
     (string/join " "
       (map
