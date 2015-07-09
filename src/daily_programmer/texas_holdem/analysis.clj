@@ -58,26 +58,25 @@
 
 ;; Functions to analyse a hand and create a vector representing the rank for sorting
 
-(defn- category
-  ([cards]
+(defn- categorise-hand
+  ([hand]
     (cond
-      (royal-flush?     cards) :royal-flush
-      (straight-flush?  cards) :straight-flush
-      (four-of-a-kind?  cards) :four-of-a-kind
-      (full-house?      cards) :full-house
-      (flush?           cards) :flush
-      (straight?        cards) :straight
-      (three-of-a-kind? cards) :three-of-a-kind
-      (two-pair?        cards) :two-pair
-      (pair?            cards) :pair
-      :else                    :high-card)))
+      (royal-flush?     hand) :royal-flush
+      (straight-flush?  hand) :straight-flush
+      (four-of-a-kind?  hand) :four-of-a-kind
+      (full-house?      hand) :full-house
+      (flush?           hand) :flush
+      (straight?        hand) :straight
+      (three-of-a-kind? hand) :three-of-a-kind
+      (two-pair?        hand) :two-pair
+      (pair?            hand) :pair
+      :else                   :high-card)))
 
 (defn- values-of-group
   ([n cards]
     (map (comp :value first) (get (group-by-value cards) n))))
 
-(def- reverse-sort    (comp reverse sort))
-(def- reverse-sort-by (comp reverse sort-by))
+(def- reverse-sort (comp reverse sort))
 
 (defn- category-rank
   ([category]
@@ -86,90 +85,47 @@
            ranks      (zipmap categories (range (count categories))) ]
       (get ranks category))))
 
-;; TODO refactor into multimethod
-(defn- describe-hand
-  ([c kicker-rank]
-    (let [[k1 k2 k3 k4 k5] (map deck/value-strs kicker-rank)]
-      (cond
-        (= c :royal-flush)     (format "Royal flush")
-        (= c :straight-flush)  (format "Straight flush, %s high" k1)
-        (= c :four-of-a-kind)  (format "Four of a kind, %s's, %s kicker" k1 k2)
-        (= c :full-house)      (format "Full house, %s's over %s's" k1 k2)
-        (= c :flush)           (format "Flush, %s %s %s %s %s" k1 k2 k3 k4 k5)
-        (= c :straight)        (format "Straight, %s high" k1)
-        (= c :three-of-a-kind) (format "Three of a kind, %s's, %s %s kickers" k1 k2 k3)
-        (= c :two-pair)        (format "Two pair, %s's and %s's, %s kicker" k1 k2 k3)
-        (= c :pair)            (format "Pair of %s's, %s %s %s kickers" k1 k2 k3 k4)
-        (= c :high-card)       (format "High card, %s, %s %s %s %s kickers" k1 k2 k3 k4 k5)
-        :else                  (throw (RuntimeException. (format "Unknown category '%s'" c)))))))
+(defn- create-description
+  ([fmt rank]
+    (let [[category k1 k2 k3 k4 k5] (map deck/value-strs rank)]
+      (format fmt k1 k2 k3 k4 k5))))
 
-(defn- analysis-result
-  ([cards category kicker-rank]
-    { :cards       cards 
-      :category    category
-      :rank        (apply vector (cons (category-rank category) kicker-rank))
-      :description (describe-hand category kicker-rank) }))
+(defmulti describe-hand (fn [category rank] category))
+(defmethod describe-hand :royal-flush     [category rank] (create-description "Royal flush" rank))
+(defmethod describe-hand :straight-flush  [category rank] (create-description "Straight flush, %s high" rank))
+(defmethod describe-hand :four-of-a-kind  [category rank] (create-description "Four of a kind, %s's, %s kicker" rank))
+(defmethod describe-hand :full-house      [category rank] (create-description "Full house, %s's over %s's" rank))
+(defmethod describe-hand :flush           [category rank] (create-description "Flush, %s %s %s %s %s" rank))
+(defmethod describe-hand :straight        [category rank] (create-description "Straight, %s high" rank))
+(defmethod describe-hand :three-of-a-kind [category rank] (create-description "Three of a kind, %s's, %s %s kickers" rank))
+(defmethod describe-hand :two-pair        [category rank] (create-description "Two pair, %s's and %s's, %s kicker" rank))
+(defmethod describe-hand :pair            [category rank] (create-description "Pair of %s's, %s %s %s kickers" rank))
+(defmethod describe-hand :high-card       [category rank] (create-description "High card, %s, %s %s %s %s kickers" rank))
 
-(defmulti analyse-hand category)
+(defn- create-rank
+  ([category kickers]
+    (apply vector (cons (category-rank category) kickers))))
 
-(defmethod analyse-hand :royal-flush
-  ([cards]
-    (analysis-result cards :royal-flush
-      nil)))
+(defmulti rank-hand (fn [category cards] category))
+(defmethod rank-hand :royal-flush     [category cards] (create-rank category nil))
+(defmethod rank-hand :straight-flush  [category cards] (create-rank category [(:value (last cards))]))
+(defmethod rank-hand :four-of-a-kind  [category cards] (create-rank category (cons (first (values-of-group 4 cards)) (values-of-group 1 cards))))
+(defmethod rank-hand :full-house      [category cards] (create-rank category [ (first (values-of-group 3 cards)) (first (values-of-group 2 cards)) ]))
+(defmethod rank-hand :flush           [category cards] (create-rank category (reverse-sort (values-of-group 1 cards))))
+(defmethod rank-hand :straight        [category cards] (create-rank category [(:value (last cards))]))
+(defmethod rank-hand :three-of-a-kind [category cards] (create-rank category (cons (first (values-of-group 3 cards)) (reverse-sort (values-of-group 1 cards)))))
+(defmethod rank-hand :two-pair        [category cards] (create-rank category (concat (reverse-sort (values-of-group 2 cards)) (values-of-group 1 cards))))
+(defmethod rank-hand :pair            [category cards] (create-rank category (concat (values-of-group 2 cards) (reverse-sort (values-of-group 1 cards)))))
+(defmethod rank-hand :high-card       [category cards] (create-rank category (reverse-sort (map :value cards))))
 
-(defmethod analyse-hand :straight-flush
-  ([cards]
-    (analysis-result cards :straight-flush
-      [(:value (last cards))])))
-
-(defmethod analyse-hand :four-of-a-kind
-  ([cards]
-    (analysis-result cards :four-of-a-kind
-      (cons
-        (first (values-of-group 4 cards))
-        (values-of-group 1 cards)))))
-
-(defmethod analyse-hand :full-house
-  ([cards]
-    (analysis-result cards :full-house
-      [ (first (values-of-group 3 cards))
-        (first (values-of-group 2 cards)) ])))
-
-(defmethod analyse-hand :flush
-  ([cards]
-    (analysis-result cards :flush
-      (reverse-sort (values-of-group 1 cards)))))
-
-(defmethod analyse-hand :straight
-  ([cards]
-    (analysis-result cards :straight
-      [(:value (last cards))] )))
-
-(defmethod analyse-hand :three-of-a-kind
-  ([cards]
-    (analysis-result cards :three-of-a-kind
-      (cons
-        (first (values-of-group 3 cards))
-        (reverse-sort (values-of-group 1 cards))))))
-
-(defmethod analyse-hand :two-pair
-  ([cards]
-    (analysis-result cards :two-pair
-      (concat
-        (reverse-sort (values-of-group 2 cards))
-        (reverse-sort (values-of-group 1 cards))) )))
-
-(defmethod analyse-hand :pair
-  ([cards]
-    (analysis-result cards :pair
-      (concat
-        (values-of-group 2 cards)
-        (reverse-sort (values-of-group 1 cards)) ))))
-
-(defmethod analyse-hand :high-card
-  ([cards]
-    (analysis-result cards :high-card
-      (reverse-sort (map :value cards)))))
+(defn analyse-hand
+  ([hand]
+    (let [ category (categorise-hand hand)
+           rank     (rank-hand category hand) ]
+      { :cards       hand    ;; TODO RENAME TO HAND
+        :category    category
+        :rank        rank
+        :description (describe-hand category rank) })))
 
 ;; Comparator for rank vectors which ignores vector length
 

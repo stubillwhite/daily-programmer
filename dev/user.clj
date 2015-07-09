@@ -53,32 +53,3 @@
   []
   (stop)
   (refresh :after 'user/go))
-
-
-
-(pprint
-  (let [ players (for [x (range 1 6)] (game/player (str "P" x)))
-         game    (game/play-game (game/game players))
-         hands   (into {} (for [ p (vals (game :players)) ] [ (-> p :best-hand :cards) (p :id) ]))
-         winners (analysis/rank-hands (keys hands)) ]
-    (map (fn [x] (get hands (x :cards))) winners)))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

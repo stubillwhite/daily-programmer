@@ -102,6 +102,3 @@
     (let [ players (for [x (range 1 6)] (player (str "P" x)))
            game    (game players) ]
       (print (game-to-str (play-game game))))))
-
-;; TODO:
-;; - Make rank-hands work on a seq of maps instead of a seq of seqs for the ranking, so each hand can have metadata associated with it
