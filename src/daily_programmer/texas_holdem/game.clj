@@ -99,6 +99,6 @@
 
 (defn play-example-game
   ([]
-    (let [ players (for [x (range 1 6)] (player (str "P" x)))
+    (let [ players (for [x (range 1 11)] (player (str "P" x)))
            game    (game players) ]
       (print (game-to-str (play-game game))))))
