@@ -15,16 +15,17 @@
   
   :dependencies [
                   ;; Core
-                  [org.clojure/clojure "1.6.0"]
+                  [org.clojure/clojure "1.7.0"]
+                  [org.clojure/math.numeric-tower "0.0.4"]
                   
                   ;; Logging
-                  [com.taoensso/timbre "3.3.1"]
+                  [com.taoensso/timbre "4.0.2"]
 
                   ;; Debugging
                   [org.clojure/tools.trace "0.7.8"]
                   
-                  [midje "1.6.3"] ]
+                  [midje "1.7.0"] ]
   
   :profiles { :dev { :dependencies [ [org.clojure/tools.namespace "0.2.10"]
-                                     [expectations "2.1.0"] ]
+                                     [expectations "2.1.2"] ]
                      :source-paths ["dev"] } })
