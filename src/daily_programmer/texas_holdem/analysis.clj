@@ -172,7 +172,7 @@
 (defn calculate-player-rank
   "Adds a :player-rank entry t the hand describing the rank order of each player's hand."
   ([{:keys [players] :as hand}]
-    (let [ hand-to-player (into {} (for [ p (vals players) ] [ (-> p :best-hand :hand) (p :id) ]))
+    (let [ hand-to-player (into {} (for [id (keys players)] [(get-in players [id :best-hand :hand]) id]))
            hand-rank      (rank-hands (keys hand-to-player))
            player-rank    (map (fn [x] (get hand-to-player (x :hand))) hand-rank) ]
       (assoc-in hand [:player-rank] player-rank))))

@@ -1,14 +1,13 @@
 (ns daily-programmer.texas-holdem.data-model)
 
 (defn hand-player
-  ([id]
-    { :id        id
-      :cards     []
+  ([]
+    { :cards     []
       :best-hand nil}))
 
 (defn hand
   ([players deck]
-    { :players     (into {} (for [p players] [(p :id) (hand-player (p :id))]))
+    { :players     (into {} (for [p players] [(p :id) (hand-player)]))
       :deck        (shuffle deck)
       :discards    []
       :flop        []
