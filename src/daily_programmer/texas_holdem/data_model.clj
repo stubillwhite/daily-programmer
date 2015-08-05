@@ -1,23 +1,25 @@
 (ns daily-programmer.texas-holdem.data-model)
 
-(defn hand-player
+(defn hand-of-cards
   ([]
-    { :cards     []
-      :best-hand nil}))
+    { :hole-cards []
+      :best-hand  nil }))
 
-(defn hand
+(defn hand-of-game
   ([players deck]
-    { :players     (into {} (for [p players] [(p :id) (hand-player)]))
-      :deck        (shuffle deck)
-      :discards    []
-      :flop        []
-      :turn        []
-      :river       []
-      :player-rank nil}))
+    { :players        (into {} (for [p players] [(p :id) p]))
+      :hands-of-cards (into {} (for [p players] [(p :id) (hand-of-cards)]))
+      :deck           (shuffle deck)
+      :discards       []
+      :flop           []
+      :turn           []
+      :river          []
+      :player-rank    nil}))
 
-(defn game-player
-  ([id]
-    { :id id }))
+(defn player
+  ([id action-func]
+    { :id          id
+      :action-func action-func }))
 
 (defn game
   ([players deck]

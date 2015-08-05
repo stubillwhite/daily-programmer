@@ -159,21 +159,20 @@
 
 (defn calculate-best-hand-per-player
   "Adds a :best-hand entry to each player describing the player's best hand from the hole cards and community cards."
-  ([{:keys [players flop turn river] :as hand}]
+  ([{:keys [flop turn river] :as hand}]
     (let [ community-cards (concat flop turn river)
            permutations    (select-from-set-without-replacement 3 community-cards)
            all-hands       (fn [p-cards] (map (partial concat p-cards) permutations))
            best-hand       (fn [p-cards] (first (rank-hands (all-hands p-cards)))) ]
       (reduce
-        (fn [hand id] (assoc-in hand [:players id :best-hand] (best-hand (get-in hand [:players id :cards]))))
+        (fn [hand id] (assoc-in hand [:hands-of-cards id :best-hand] (best-hand (get-in hand [:hands-of-cards id :hole-cards]))))
         hand
-        (keys (hand :players))))))
+        (keys (hand :hands-of-cards))))))
 
 (defn calculate-player-rank
   "Adds a :player-rank entry t the hand describing the rank order of each player's hand."
-  ([{:keys [players] :as hand}]
-    (let [ hand-to-player (into {} (for [id (keys players)] [(get-in players [id :best-hand :hand]) id]))
+  ([{:keys [hands-of-cards] :as hand}]
+    (let [ hand-to-player (into {} (for [id (keys hands-of-cards)] [(get-in hands-of-cards [id :best-hand :hand]) id]))
            hand-rank      (rank-hands (keys hand-to-player))
            player-rank    (map (fn [x] (get hand-to-player (x :hand))) hand-rank) ]
       (assoc-in hand [:player-rank] player-rank))))
-
