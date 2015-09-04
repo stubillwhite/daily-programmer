@@ -14,9 +14,9 @@
     [clojure.tools.namespace.repl :refer (refresh refresh-all)]
     [clojure.tools.trace :refer (trace-ns untrace-ns)]
     [daily-programmer.system :as system]
-    [daily-programmer.core :as core]
     [daily-programmer.texas-holdem.game :as game]
-    [daily-programmer.texas-holdem.analysis :as analysis])
+    [daily-programmer.simple-stream-cypher.cypher :as cypher]
+    )
   (:use
     [midje.repl]))
 

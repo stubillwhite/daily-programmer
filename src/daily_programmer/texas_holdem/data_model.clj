@@ -8,12 +8,14 @@
 (defn hand-of-game
   ([players deck]
     { :players        (into {} (for [p players] [(p :id) p]))
+      :phase          nil
+      :player-actions {}
       :hands-of-cards (into {} (for [p players] [(p :id) (hand-of-cards)]))
       :deck           (shuffle deck)
-      :discards       []
-      :flop           []
-      :turn           []
-      :river          []
+      :common-cards   { :discards []
+                        :flop     []
+                        :turn     []
+                        :river    [] }
       :player-rank    nil}))
 
 (defn player
@@ -23,7 +25,6 @@
 
 (defn game
   ([players deck]
-    { :players players
-      :deck    deck
-      :hand    nil }))
-
+    { :players      players
+      :deck         deck
+      :hand-of-game nil }))
