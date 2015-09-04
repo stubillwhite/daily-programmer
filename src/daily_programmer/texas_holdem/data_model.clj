@@ -8,8 +8,6 @@
 (defn hand-of-game
   ([players deck]
     { :players        (into {} (for [p players] [(p :id) p]))
-      :phase          nil
-      :player-actions {}
       :hands-of-cards (into {} (for [p players] [(p :id) (hand-of-cards)]))
       :deck           (shuffle deck)
       :common-cards   { :discards []
