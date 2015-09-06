@@ -9,6 +9,7 @@
   ([players deck]
     { :players        (into {} (for [p players] [(p :id) p]))
       :hands-of-cards (into {} (for [p players] [(p :id) (hand-of-cards)]))
+      :player-actions {}
       :deck           (shuffle deck)
       :common-cards   { :discards []
                         :flop     []

@@ -38,7 +38,9 @@
 
 (defn- action-to-str
   ([action]
-    (get { :check "Check" } action)))
+    (get { :check "Check"
+           :fold  "Fold"
+           :raise "Raise" } action)))
 
 (defn display-player-action
   ([hand id action]

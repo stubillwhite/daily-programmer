@@ -32,11 +32,12 @@
 (defn- get-player-action
   ([hand id action-phase]
     (let [action-func (get-in hand [:players id :action-func])]
-      (action-func action-phase hand))))
+      (action-func hand action-phase))))
 
+;; TODO: Implement folding
 (defn- execute-player-action
   ([hand id action-phase action]
-    hand))
+    (assoc-in hand [:player-actions id action-phase] action)))
 
 (defn- perform-player-action
   ([hand id action-phase]
@@ -60,15 +61,18 @@
 
       (ui/display-player-hands)
       (player-actions :before-the-flop)
-      
+
+      (burn-card)
       (deal-flop)
       (ui/display-flop)
       (player-actions :after-the-flop)
-      
+
+      (burn-card)
       (deal-turn)
       (ui/display-turn)
       (player-actions :after-the-turn)
-      
+
+      (burn-card)
       (deal-river)
       (ui/display-river)
       (player-actions :after-the-river)
@@ -85,7 +89,8 @@
 
 (defn play-example-game
   ([]
-    (let [ players (for [x (range 1 5)] (dm/player (str "P" x) ai/always-check))
-           game    (dm/game players deck/standard-deck)]
+    (let [ player-ids (for [x (range 1 5)] (str "P" x))
+           players    (for [id player-ids] (dm/player id (partial ai/fold-if-no-face-cards id)))
+           game       (dm/game players deck/standard-deck)]
       (->  game
         (play-hand-of-game)))))
