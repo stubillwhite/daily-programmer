@@ -53,9 +53,17 @@
       (cards-to-str (get-in hands-of-cards [id :best-hand :hand]))
       (get-in hands-of-cards [id :best-hand :description]))))
 
-(defn display-final-hand-state
+(defn display-best-hands
   ([{:keys [hands-of-cards player-rank] :as hand}]
     (println
-      (format "\nFinal standings:\n%s"
+      (format "\nBest hands:\n%s"
         (string/join "\n" (map (fn [x] (player-best-hand-to-str hands-of-cards x)) player-rank))))
     hand))
+
+(defn display-winner
+  ([{:keys [player-rank participants] :as hand}]
+    (let [ranked-participants (filter (fn [x] (some #{x} participants)) player-rank)]
+      (println
+        (format "\nFinal standings:\n%s"
+          (string/join "\n" ranked-participants))))))
+

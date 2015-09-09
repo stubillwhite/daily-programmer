@@ -5,6 +5,7 @@
     [daily-programmer.texas-holdem.ui :as ui]
     [daily-programmer.texas-holdem.ai :as ai]
     [daily-programmer.texas-holdem.data-model :as dm]
+    [clojure.set :as set]
     [taoensso.timbre :as timbre])
   (:use
     [daily-programmer.utils :refer [def-]]))
@@ -22,7 +23,7 @@
     (reduce
       (fn [hand id] (deal-n-cards-to hand [:hands-of-cards id :hole-cards] 1))
       hand
-      (keys (hand :players)))))
+      (hand :participants))))
 
 (defn- burn-card  [hand] (deal-n-cards-to hand [:common-cards :discards] 1))
 (defn- deal-flop  [hand] (deal-n-cards-to hand [:common-cards :flop]     3))
@@ -34,24 +35,30 @@
     (let [action-func (get-in hand [:players id :action-func])]
       (action-func hand action-phase))))
 
-;; TODO: Implement folding
-(defn- execute-player-action
+(defn- store-player-action
   ([hand id action-phase action]
     (assoc-in hand [:player-actions id action-phase] action)))
+
+(defn- execute-player-action
+  ([hand id action-phase action]
+    (if (= action :fold)
+      (update-in hand [:participants] (fn [x] (set/difference x #{id})))
+      hand)))
 
 (defn- perform-player-action
   ([hand id action-phase]
     (let [action (get-player-action hand id action-phase)]
       (-> hand
         (ui/display-player-action id action)
+        (store-player-action id action-phase action)
         (execute-player-action id action-phase action)))))
 
 (defn player-actions
-  ([{:keys [players] :as hand} action-phase]
+  ([{:keys [participants] :as hand} action-phase]
     (reduce
       (fn [hand id] (perform-player-action hand id action-phase))
       hand
-      (keys players))))
+      participants)))
 
 (defn play-hand
   ([hand]
@@ -80,7 +87,8 @@
       (analysis/calculate-best-hand-per-player)
       (analysis/calculate-player-hand-rank)
 
-      (ui/display-final-hand-state))))
+      (ui/display-best-hands)
+      (ui/display-winner))))
 
 (defn play-hand-of-game
   ([game]
@@ -90,7 +98,5 @@
 (defn play-example-game
   ([]
     (let [ player-ids (for [x (range 1 5)] (str "P" x))
-           players    (for [id player-ids] (dm/player id (partial ai/fold-if-no-face-cards id)))
-           game       (dm/game players deck/standard-deck)]
-      (->  game
-        (play-hand-of-game)))))
+           players    (for [id player-ids] (dm/player id (partial ai/fold-if-no-face-cards id))) ]
+      (play-hand-of-game (dm/game players deck/standard-deck)))))

@@ -7,8 +7,9 @@
 
 (defn hand-of-game
   ([players deck]
-    { :players        (into {} (for [p players] [(p :id) p]))
-      :hands-of-cards (into {} (for [p players] [(p :id) (hand-of-cards)]))
+    { :players        (into  {} (for [p players] [(p :id) p]))
+      :participants   (into #{} (map :id players))
+      :hands-of-cards (into  {} (for [p players] [(p :id) (hand-of-cards)]))
       :player-actions {}
       :deck           (shuffle deck)
       :common-cards   { :discards []
@@ -24,6 +25,5 @@
 
 (defn game
   ([players deck]
-    { :players      players
-      :deck         deck
-      :hand-of-game nil }))
+    { :players players
+      :deck    deck }))
